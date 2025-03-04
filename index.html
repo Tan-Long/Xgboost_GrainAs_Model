@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dự đoán nồng độ As trong hạt</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .file-input {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+        }
+        .safe {
+            background-color: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+        }
+        .warning {
+            background-color: rgba(241, 196, 15, 0.2);
+            border: 1px solid #f1c40f;
+        }
+        .danger {
+            background-color: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+        }
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .safe .result-value {
+            color: #27ae60;
+        }
+        .warning .result-value {
+            color: #d35400;
+        }
+        .danger .result-value {
+            color: #c0392b;
+        }
+        .gauge {
+            width: 200px;
+            height: 100px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+        .gauge-bg {
+            width: 200px;
+            height: 100px;
+            background: linear-gradient(90deg, #2ecc71 0%, #f1c40f 50%, #e74c3c 100%);
+            border-radius: 100px 100px 0 0;
+        }
+        .gauge-needle {
+            position: absolute;
+            width: 2px;
+            height: 85px;
+            background-color: #333;
+            left: 50%;
+            bottom: 0;
+            transform-origin: bottom center;
+            transform: rotate(0deg);
+            transition: transform 0.5s ease;
+        }
+        .gauge-needle::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #333;
+            border-radius: 50%;
+            left: -4px;
+            bottom: -5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dự đoán nồng độ As trong hạt</h1>
+        
+        <div class="file-input">
+            <p>Tải lên các file mô hình XGBoost và Scaler</p>
+            <input type="file" id="xgboost-model" accept=".json,.model">
+            <label for="xgboost-model">File mô hình XGBoost</label>
+            <br><br>
+            <input type="file" id="scaler-model" accept=".json,.pkl">
+            <label for="scaler-model">File Scaler</label>
+        </div>
+
+        <div class="form-group">
+            <label for="soil-as">Soil.As</label>
+            <input type="number" id="soil-as" step="0.01" placeholder="Nhập giá trị Soil.As">
+        </div>
+        <div class="form-group">
+            <label for="soil-al">Soil.Al</label>
+            <input type="number" id="soil-al" step="0.01" placeholder="Nhập giá trị Soil.Al">
+        </div>
+        <div class="form-group">
+            <label for="soil-p">Soil.P</label>
+            <input type="number" id="soil-p" step="0.01" placeholder="Nhập giá trị Soil.P">
+        </div>
+        <div class="form-group">
+            <label for="soil-s">Soil.S</label>
+            <input type="number" id="soil-s" step="0.01" placeholder="Nhập giá trị Soil.S">
+        </div>
+        <div class="form-group">
+            <label for="soil-mn">Soil.Mn</label>
+            <input type="number" id="soil-mn" step="0.01" placeholder="Nhập giá trị Soil.Mn">
+        </div>
+        <div class="form-group">
+            <label for="soil-fe">Soil.Fe</label>
+            <input type="number" id="soil-fe" step="0.01" placeholder="Nhập giá trị Soil.Fe">
+        </div>
+        <div class="form-group">
+            <label for="soil-ph">Soil.pH</label>
+            <input type="number" id="soil-ph" step="0.01" placeholder="Nhập giá trị Soil.pH">
+        </div>
+        <div class="form-group">
+            <label for="soil-clay">Soil.Clay</label>
+            <input type="number" id="soil-clay" step="0.01" placeholder="Nhập giá trị Soil.Clay">
+        </div>
+        <div class="form-group">
+            <label for="soil-som">Soil.SOM</label>
+            <input type="number" id="soil-som" step="0.01" placeholder="Nhập giá trị Soil.SOM">
+        </div>
+
+        <button id="predict-btn">Dự đoán</button>
+
+        <div id="result" class="result">
+            <h2>Kết quả dự đoán</h2>
+            <div class="gauge">
+                <div class="gauge-bg"></div>
+                <div class="gauge-needle" id="gauge-needle"></div>
+            </div>
+            <p>Nồng độ As trong hạt (Grain.As):</p>
+            <div class="result-value" id="result-value">0.0 mg/kg</div>
+            <p id="result-message">Chưa có dự đoán</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predict-btn').addEventListener('click', function() {
+            // Trong một ứng dụng thực tế, đây là nơi bạn sẽ xử lý tải lên file 
+            // và chạy mô hình XGBoost để dự đoán
+            
+            // Giả lập dự đoán (trong ứng dụng thực tế, đây là nơi mô hình của bạn sẽ hoạt động)
+            const inputs = {
+                'Soil.As': parseFloat(document.getElementById('soil-as').value) || 0,
+                'Soil.Al': parseFloat(document.getElementById('soil-al').value) || 0,
+                'Soil.P': parseFloat(document.getElementById('soil-p').value) || 0,
+                'Soil.S': parseFloat(document.getElementById('soil-s').value) || 0,
+                'Soil.Mn': parseFloat(document.getElementById('soil-mn').value) || 0,
+                'Soil.Fe': parseFloat(document.getElementById('soil-fe').value) || 0,
+                'Soil.pH': parseFloat(document.getElementById('soil-ph').value) || 0,
+                'Soil.Clay': parseFloat(document.getElementById('soil-clay').value) || 0,
+                'Soil.SOM': parseFloat(document.getElementById('soil-som').value) || 0
+            };
+            
+            // Kiểm tra xem người dùng đã tải lên file chưa
+            const xgboostFile = document.getElementById('xgboost-model').files[0];
+            const scalerFile = document.getElementById('scaler-model').files[0];
+            
+            if (!xgboostFile || !scalerFile) {
+                alert("Vui lòng tải lên cả file mô hình XGBoost và file Scaler");
+                return;
+            }
+            
+            // Trong thực tế, bạn sẽ xử lý file tại đây và sử dụng mô hình để dự đoán
+            // Đối với mục đích minh họa, chúng ta sẽ sử dụng một giá trị ngẫu nhiên
+            
+            const mockPrediction = Math.random() * 2; // Giả lập giá trị từ 0-2
+            displayResult(mockPrediction);
+        });
+
+        function displayResult(value) {
+            const resultElement = document.getElementById('result');
+            const resultValueElement = document.getElementById('result-value');
+            const resultMessageElement = document.getElementById('result-message');
+            const gaugeNeedle = document.getElementById('gauge-needle');
+            
+            // Hiển thị kết quả
+            resultValueElement.textContent = value.toFixed(3) + ' mg/kg';
+            
+            // Xác định mức độ an toàn và hiển thị màu sắc tương ứng
+            resultElement.classList.remove('safe', 'warning', 'danger');
+            
+            // Xoay kim đồng hồ (0-180 độ)
+            const needleAngle = (value / 2) * 180 - 90;
+            gaugeNeedle.style.transform = `rotate(${needleAngle}deg)`;
+            
+            if (value < 0.5) {
+                resultElement.classList.add('safe');
+                resultMessageElement.textContent = 'An toàn cho sức khỏe';
+            } else if (value < 1.0) {
+                resultElement.classList.add('warning');
+                resultMessageElement.textContent = 'Cảnh báo - Cần theo dõi';
+            } else {
+                resultElement.classList.add('danger');
+                resultMessageElement.textContent = 'Nguy hiểm - Không an toàn cho sức khỏe';
+            }
+            
+            resultElement.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
